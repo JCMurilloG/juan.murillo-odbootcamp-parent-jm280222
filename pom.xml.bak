@@ -1,0 +1,188 @@
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- an example parent pom project from OD Bootcamp -->
+
+	<parent>
+		<groupId>com.travelport.od</groupId>
+		<artifactId>ODParentPom</artifactId>
+		<version>1.0.0</version>
+	</parent>
+
+	<groupId>com.travelport.odbootcamp</groupId>
+	<artifactId>odbootcamp-parent-JM22822</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<name>odbootcamp-parent</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<rest-framework.version>5.2.0</rest-framework.version>
+		<test-framework.version>4.0.0</test-framework.version>
+		<elogging.version>5.1.0</elogging.version>
+		<!-- used with eLogging -->
+		<disruptor.version>3.3.6</disruptor.version>
+		<interactionmgr.version>16.3</interactionmgr.version>
+		<slf4j.api.version>1.7.32</slf4j.api.version>
+		<log4j.version>2.17.1</log4j.version>
+		<log4j.slf4j.version>2.17.1</log4j.slf4j.version>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- overwrite the sca-maven-plugin to exclude sisu-guava, which was causing 
+				errors in Stackato -->
+			<!-- TODO determine if this is still necessary -->
+			<dependency>
+				<groupId>com.fortify.ps.maven.plugin</groupId>
+				<artifactId>sca-maven-plugin</artifactId>
+				<version>4.40</version><!-- put the "right" version here -->
+				<exclusions>
+					<exclusion>
+						<groupId>org.sonatype.sisu</groupId>
+						<artifactId>sisu-guava</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+
+			<!-- OD Toolkit dependencies -->
+			<!-- include whatever is needed in your child project, without the version -->
+			<dependency>
+	            <groupId>com.travelport.odt</groupId>
+	            <artifactId>odt-bom</artifactId>
+	            <version>${rest-framework.version}</version>
+				<scope>import</scope>
+				<type>pom</type>
+            </dependency>
+
+			<!-- Test Automation Framework dependencies -->
+			<!-- include whatever is needed in your child project, without the version -->
+			<dependency>
+	            <groupId>com.travelport.taf</groupId>
+	            <artifactId>taf-bom</artifactId>
+	            <version>${test-framework.version}</version>
+				<scope>import</scope>
+				<type>pom</type>
+            </dependency>
+			
+			<dependency>
+				<groupId>com.lmax</groupId>
+				<artifactId>disruptor</artifactId>
+				<version>${disruptor.version}</version>
+				<scope>runtime</scope>
+			</dependency>
+
+			<!-- for eLogging framework -->
+			<dependency>
+				<groupId>com.travelport.soa.lib.common.technical.logging</groupId>
+				<artifactId>EnterpriseLoggingClientProject</artifactId>
+				<version>${elogging.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.travelport.soa.lib.common.technical.sessioning.interactionmanager</groupId>
+				<artifactId>InteractionManagerProject</artifactId>
+				<version>${interactionmgr.version}</version>
+			</dependency>
+
+			<!-- Redis Cache client API -->
+			<dependency>
+				<groupId>biz.paluch.redis</groupId>
+				<artifactId>lettuce</artifactId>
+				<version>4.3.1.Final</version>
+			</dependency>
+
+			<!-- for testing -->
+			
+			<!-- overridding the rest-framework-mock to force the dependency -->
+			<!-- to only be used during the test phase of the build, -->
+			<!-- not to be part of the deployable artifact -->
+			<dependency>
+				<groupId>com.travelport.odt.restfw</groupId>
+				<artifactId>rest-framework-mock</artifactId>
+				<version>${rest-framework.version}</version>
+				<scope>test</scope>
+			</dependency>
+			
+			<!-- log4j and slf4j dependencies -->
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.api.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-api</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>     
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-slf4j-impl</artifactId>
+				<version>${log4j.slf4j.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<!-- This is for the Eclipse m2e plugin to execute the jacoco plugin 
+					correctly -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>com.travelport.odt.restfw.generated.plugin</groupId>
+										<artifactId>GeneratorPlugin</artifactId>
+										<!--  for upgrade, don't change the versionRange -->
+										<versionRange>[3.1.0,)</versionRange>
+										<goals>
+											<goal>rest-compile</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute />
+									</action>
+								</pluginExecution>
+								<!-- This is for the Eclipse m2e plugin to execute the jacoco plugin 
+									correctly -->
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.opentravel.otm</groupId>
+										<artifactId>ota2-repository-plugin</artifactId>
+                                        <!--  for upgrade, don't change the versionRange -->
+										<versionRange>[4.0.beta17,)</versionRange>
+										<goals>
+											<goal>initialize-snapshot</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+<!-- TODO delete distributionManagement when copied -->
+
+<!--TODO when this pom.xml is copied for ODBC, change the scm git repository location to your repo location -->
+<!-- 
+  <scm>
+    <connection>scm:git:https://gitbucket.tvlport.com/git/ODBootcamp/odbootcamp-parent.git</connection>
+    <developerConnection>scm:git:https://gitbucket.tvlport.com/git/ODBootcamp/odbootcamp-parent.git</developerConnection>
+  </scm>
+ -->  
+</project>
